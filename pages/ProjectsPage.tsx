@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { ArrowRight, ArrowUpRight, X } from 'lucide-react';
+import { useState, useCallback, useEffect } from 'react';
+import { ArrowRight, X, Loader2, AlertCircle, ChevronRight } from 'lucide-react';
 import { projects, type Project } from '../data';
 import { useReveal } from '../useReveal';
+import { supabase, type LessonContent } from '../supabase';
 
 function Intro() {
   const { ref, visible } = useReveal<HTMLDivElement>();
@@ -26,7 +27,7 @@ function Intro() {
         <p className="mt-6 max-w-xl text-lg leading-relaxed text-ink-600">
           Từ kỹ năng nền tảng như quản lý tệp tin đến những nhiệm vụ phức tạp hơn
           — viết prompt AI, làm việc nhóm trực tuyến và tổng hợp sản phẩm. Chọn
-          một bài học để xem chi tiết.
+          một bài học để xem nội dung chi tiết.
         </p>
       </div>
     </section>
@@ -48,10 +49,11 @@ function ProjectCard({
     <button
       ref={ref}
       onClick={onOpen}
-      className={`reveal ${visible ? 'is-visible' : ''} group relative flex flex-col overflow-hidden rounded-3xl border border-ink-200/70 bg-white/70 p-6 text-left backdrop-blur-sm transition-all duration-500 hover:-translate-y-1.5 hover:border-teal-300 hover:shadow-xl hover:shadow-ink-900/8 sm:p-7`}
+      className={`reveal ${
+        visible ? 'is-visible' : ''
+      } group relative flex flex-col overflow-hidden rounded-3xl border border-ink-200/70 bg-white/70 p-6 text-left backdrop-blur-sm transition-all duration-500 hover:-translate-y-1.5 hover:border-teal-300 hover:shadow-xl hover:shadow-ink-900/8 sm:p-7`}
       style={{ transitionDelay: `${index * 60}ms` }}
     >
-      {/* Hover gradient */}
       <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-teal-50/0 to-teal-100/0 transition-all duration-500 group-hover:from-teal-50/50 group-hover:to-teal-100/30" />
 
       <div className="relative flex items-center justify-between">
@@ -66,10 +68,8 @@ function ProjectCard({
       <h3 className="relative mt-5 font-serif text-2xl font-medium text-ink-900 transition-colors duration-300 group-hover:text-teal-800">
         {project.title}
       </h3>
-      <p className="relative mt-1 text-sm text-teal-700 font-medium">{project.subtitle}</p>
-      <p className="relative mt-4 text-sm leading-relaxed text-ink-600">
-        {project.summary}
-      </p>
+      <p className="relative mt-1 text-sm font-medium text-teal-700">{project.subtitle}</p>
+      <p className="relative mt-4 text-sm leading-relaxed text-ink-600">{project.summary}</p>
 
       <div className="relative mt-5 flex flex-wrap gap-2">
         {project.tags.map((t) => (
@@ -82,85 +82,146 @@ function ProjectCard({
         ))}
       </div>
 
-      <span className="relative mt-5 inline-flex items-center gap-1 text-sm font-medium text-teal-700 transition-all duration-300 group-hover:gap-2 group-hover:text-teal-600">
-        Xem chi tiết <ArrowUpRight size={15} />
+      <span className="relative mt-5 inline-flex items-center gap-1 text-sm font-medium text-teal-700 transition-all duration-300 group-hover:gap-2">
+        Xem nội dung bài học <ChevronRight size={15} />
       </span>
     </button>
   );
 }
 
-function Modal({ project, onClose }: { project: Project; onClose: () => void }) {
+function LessonModal({
+  project,
+  onClose,
+}: {
+  project: Project;
+  onClose: () => void;
+}) {
+  const [content, setContent] = useState<LessonContent | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchContent = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    const { data, error: err } = await supabase
+      .from('lesson_content')
+      .select('*')
+      .eq('id', project.id)
+      .maybeSingle();
+
+    if (err) {
+      setError(err.message);
+    } else {
+      setContent(data);
+    }
+    setLoading(false);
+  }, [project.id]);
+
+  // Fetch on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchContent(); }, []);
+
   const Icon = project.icon;
+
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-end justify-center bg-ink-950/50 p-0 backdrop-blur-sm sm:items-center sm:p-6"
+      className="fixed inset-0 z-[60] flex items-end justify-center bg-ink-950/60 p-0 backdrop-blur-sm sm:items-center sm:p-6"
       onClick={onClose}
     >
       <div
-        className="animate-scale-in relative max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-ink-50 p-7 shadow-2xl sm:rounded-3xl sm:p-9"
+        className="animate-scale-in relative flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl bg-ink-50 shadow-2xl sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <button
-          onClick={onClose}
-          className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full bg-ink-100 text-ink-600 transition-colors hover:bg-ink-200 hover:text-ink-900"
-          aria-label="Đóng"
-        >
-          <X size={18} />
-        </button>
-
-        <div className="flex items-center gap-4">
-          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-teal-700 text-ink-50 shadow-md">
-            <Icon size={26} />
+        {/* Header */}
+        <div className="flex items-center gap-4 border-b border-ink-200/70 bg-white px-6 py-5 sm:px-8">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-teal-700 text-ink-50 shadow-md">
+            <Icon size={22} />
           </span>
-          <div>
-            <p className="font-serif text-sm font-medium text-ink-400">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold uppercase tracking-wider text-teal-600">
               {project.number}
             </p>
-            <h3 className="font-serif text-2xl font-medium text-ink-900">
+            <h3 className="font-serif text-xl font-medium leading-tight text-ink-900 sm:text-2xl">
               {project.title}
             </h3>
           </div>
+          <button
+            onClick={onClose}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink-100 text-ink-600 transition-colors hover:bg-ink-200 hover:text-ink-900"
+            aria-label="Đóng"
+          >
+            <X size={18} />
+          </button>
         </div>
 
-        <p className="mt-5 text-xs font-semibold uppercase tracking-wider text-teal-700 bg-teal-50 inline-block px-3 py-1 rounded-full">
-          {project.subtitle}
-        </p>
-        <p className="mt-4 text-base leading-relaxed text-ink-700">
-          {project.summary}
-        </p>
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto px-6 py-6 sm:px-8">
+          {loading && (
+            <div className="flex flex-col items-center justify-center gap-3 py-16 text-ink-400">
+              <Loader2 size={28} className="animate-spin text-teal-600" />
+              <p className="text-sm">Đang tải nội dung…</p>
+            </div>
+          )}
 
-        <h4 className="mt-7 text-xs font-semibold uppercase tracking-wider text-ink-400">
-          Điểm rút ra
-        </h4>
-        <ul className="mt-3 space-y-2.5">
-          {project.takeaways.map((t, i) => (
-            <li
-              key={i}
-              className="flex items-start gap-3 rounded-xl border border-ink-200/70 bg-white px-4 py-3"
-            >
-              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-teal-500" />
-              <span className="text-sm leading-relaxed text-ink-700">{t}</span>
-            </li>
-          ))}
-        </ul>
+          {error && (
+            <div className="flex flex-col items-center gap-3 rounded-2xl border border-red-200 bg-red-50 p-6 text-center">
+              <AlertCircle size={24} className="text-red-500" />
+              <p className="text-sm text-red-700">{error}</p>
+              <button
+                onClick={fetchContent}
+                className="rounded-full bg-red-600 px-4 py-2 text-xs font-medium text-white hover:bg-red-700"
+              >
+                Thử lại
+              </button>
+            </div>
+          )}
 
-        <div className="mt-6 flex flex-wrap gap-2">
-          {project.tags.map((t) => (
-            <span
-              key={t}
-              className="rounded-full bg-teal-50 px-3 py-1 text-xs font-medium text-teal-700"
-            >
-              {t}
-            </span>
-          ))}
+          {!loading && !error && !content && (
+            <div className="flex flex-col items-center gap-2 py-16 text-ink-400">
+              <p className="text-sm">Chưa có nội dung cho bài học này.</p>
+            </div>
+          )}
+
+          {!loading && !error && content && (
+            <div className="space-y-6">
+              {content.sections.map((section, i) => (
+                <div
+                  key={i}
+                  className="rounded-2xl border border-ink-200/70 bg-white px-5 py-5"
+                >
+                  <h4 className="font-serif text-base font-semibold text-ink-900 sm:text-lg">
+                    {section.heading}
+                  </h4>
+                  <div className="mt-2 text-sm leading-relaxed text-ink-700 whitespace-pre-line">
+                    {section.body}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        <button
-          onClick={onClose}
-          className="mt-6 w-full rounded-2xl bg-ink-950 py-3 text-sm font-medium text-ink-50 transition-colors hover:bg-teal-700"
-        >
-          Đóng
-        </button>
+        {/* Footer */}
+        <div className="border-t border-ink-200/70 bg-white px-6 py-4 sm:px-8">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap gap-2">
+              {project.tags.map((t) => (
+                <span
+                  key={t}
+                  className="rounded-full bg-teal-50 px-3 py-1 text-xs font-medium text-teal-700"
+                >
+                  {t}
+                </span>
+              ))}
+            </div>
+            <button
+              onClick={onClose}
+              className="rounded-full bg-ink-950 px-5 py-2 text-sm font-medium text-ink-50 transition-colors hover:bg-teal-700"
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -169,15 +230,10 @@ function Modal({ project, onClose }: { project: Project; onClose: () => void }) 
 function CtaNext({ onClick }: { onClick: () => void }) {
   const { ref, visible } = useReveal<HTMLElement>();
   return (
-    <section
-      ref={ref}
-      className={`reveal ${visible ? 'is-visible' : ''} py-20`}
-    >
+    <section ref={ref} className={`reveal ${visible ? 'is-visible' : ''} py-20`}>
       <div className="container-prose text-center">
         <p className="eyebrow mb-4">Tiếp theo</p>
-        <h2 className="display text-3xl sm:text-4xl">
-          Nhìn lại toàn bộ quá trình
-        </h2>
+        <h2 className="display text-3xl sm:text-4xl">Nhìn lại toàn bộ quá trình</h2>
         <p className="mx-auto mt-4 max-w-md text-ink-600">
           Sau sáu bài học, mình đúc kết lại những thay đổi về tư duy, kỹ năng và
           phong cách làm việc.
@@ -211,7 +267,7 @@ export default function ProjectsPage({ onNavigate }: { onNavigate: (href: string
         </div>
       </section>
       <CtaNext onClick={() => onNavigate('/conclusion')} />
-      {active && <Modal project={active} onClose={() => setActive(null)} />}
+      {active && <LessonModal project={active} onClose={() => setActive(null)} />}
     </main>
   );
 }

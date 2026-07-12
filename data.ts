@@ -1,5 +1,4 @@
 import type { LucideIcon } from 'lucide-react';
-import avatarImg from './assets/images/db3aad7c-a1ac-4b64-9c3c-427036e440f6.jpg';
 import {
   Sparkles,
   GraduationCap,
@@ -22,7 +21,7 @@ export const profile = {
   msv: '25051699',
   major: 'Quản Trị Kinh Doanh',
   school: 'Đại học Kinh tế - ĐHQGHN (VNU-UEB)',
-  avatar: avatarImg,
+  avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=400',
 };
 
 export type AboutSection = {

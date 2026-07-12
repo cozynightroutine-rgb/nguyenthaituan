@@ -51,4 +51,3 @@ export default function Footer({ onNavigate }: { onNavigate: (href: string) => v
     </footer>
   );
 }
-https://stackblitz.com/storage/blobs/eyJfcmFpbHMiOnsiZGF0YSI6MTcyNjQ5MDE4LCJwdXIiOiJibG9iX2lkIn19--31762744a2e5963949edbcfd451b2f3db076821f/Footer.tsx

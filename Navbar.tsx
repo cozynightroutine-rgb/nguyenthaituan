@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { navItems, profile } from './data';
 
@@ -125,4 +125,3 @@ export default function Navbar({ current, onNavigate }: Props) {
     </>
   );
 }
-https://stackblitz.com/storage/blobs/eyJfcmFpbHMiOnsiZGF0YSI6MTcyNjQ5MDI1LCJwdXIiOiJibG9iX2lkIn19--6459e0bf17cab40d0acb7f0f858bd9c3dba352f8/Navbar.tsx
