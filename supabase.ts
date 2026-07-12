@@ -16,4 +16,3 @@ export type LessonContent = {
   sections: LessonSection[];
   created_at: string;
 };
-https://stackblitz.com/storage/blobs/eyJfcmFpbHMiOnsiZGF0YSI6MTcyNjQ5MDI5LCJwdXIiOiJibG9iX2lkIn19--62812743d530fc4f2a7997573c1d33f3f1f358b1/supabase.ts

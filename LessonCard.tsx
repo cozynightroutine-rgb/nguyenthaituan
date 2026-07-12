@@ -1,2 +1,1 @@
 export {};
-https://stackblitz.com/storage/blobs/eyJfcmFpbHMiOnsiZGF0YSI6MTcyNjQ5MDIyLCJwdXIiOiJibG9iX2lkIn19--93c6996d4191d77a4cca99f07a0dcb9a226a3d64/LessonCard.tsx

@@ -1,2 +1,1 @@
 /// <reference types="vite/client" />
-https://stackblitz.com/storage/blobs/eyJfcmFpbHMiOnsiZGF0YSI6MTcyNjQ5MDI4LCJwdXIiOiJibG9iX2lkIn19--655d025da8cea16ebd0671c74fcf28ecc6127407/vite-env.d.ts
