@@ -1,0 +1,73 @@
+import { useEffect, useState, useCallback } from 'react';
+import { supabase, type Lesson } from './lib/supabase';
+import LessonCard from './components/LessonCard';
+
+export default function App() {
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchLessons = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    const { data, error } = await supabase
+      .from('lessons')
+      .select('*')
+      .order('order_index', { ascending: true });
+    if (error) {
+      setError(error.message);
+    } else {
+      setLessons(data ?? []);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchLessons();
+  }, [fetchLessons]);
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <header className="bg-gradient-to-r from-sky-700 to-cyan-600 text-white shadow-lg">
+        <div className="max-w-4xl mx-auto px-6 py-10">
+          <h1 className="text-3xl font-bold tracking-tight">Học liệu Tin học</h1>
+          <p className="mt-2 text-sky-100 text-base">
+            Nhấn vào từng bài học để xem nội dung chi tiết và tài liệu đính kèm.
+          </p>
+        </div>
+      </header>
+
+      <main className="max-w-4xl mx-auto px-6 py-8">
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin h-8 w-8 border-4 border-sky-500 border-t-transparent rounded-full" />
+          </div>
+        )}
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 mb-6">
+            Lỗi tải bài học: {error}
+          </div>
+        )}
+
+        {!loading && !error && lessons.length === 0 && (
+          <div className="text-center py-20 text-slate-400">
+            Chưa có bài học nào.
+          </div>
+        )}
+
+        {!loading && !error && lessons.length > 0 && (
+          <div className="space-y-4">
+            {lessons.map((lesson) => (
+              <LessonCard key={lesson.id} lesson={lesson} />
+            ))}
+          </div>
+        )}
+      </main>
+
+      <footer className="text-center py-6 text-slate-400 text-sm">
+        Nền tảng học liệu Tin học
+      </footer>
+    </div>
+  );
+}
